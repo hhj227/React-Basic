@@ -11,6 +11,13 @@ import Movie from './Movie';
 //mounting function order: componentWillMount->render->componentDidMount
 //Components don't update when their props are the same
 //When the components updates, the render function is called again
+//Accessing the state of the component: this.state.
+//Changing the state of the component: this.setState({})
+//If the state changes, the component renders(render()) again
+//A dumb component doesn't have state nor render function, and is not a class
+//AJAX: Asynchronous Javascript and XML
+//"await": we want to wait for the promise() to finish before continue
+//We can't use await variable in a non async function
 
 
 //데이터 소스는 한군데로 메인 컴포넌트가 데이터를 다 가지고 있음
@@ -20,52 +27,58 @@ import Movie from './Movie';
 //movies array를 새로 mapping해서 새로운 array를 만듬
 
 //컴포넌트: willmount->render->didmount : 이 세가지는 컴포넌트가 존재하기 시작할때 작동함
+
+//react 자체 기능과 나의 기능을 구분하기 위해서 언더바(_)를 앞에 쓴다
+
+//stateless functional 컴포넌트: state가 없는 컴포넌트: no function render, no lifecycle
+
+//JSON: Javascript Object Notation
+//promise: Asynchrnous : 다른 작업을 스케쥴해 놓을 수 있어서 좋다. 모든 작업들은 다른 작업수행과는 관계없이 진행된다
+
 class App extends Component {
   // 자동으로 이 순서대로 작동한다
   // Render: componentWillMount() -> render() -> componentDidMount()
   // Update componentWillReceiveProps() -> shouldComponentUpdate() -> componentWillUpdate() -> render() -> componentDidUpdate()
   // 컴포넌트가 마운트할때마다 greeting을 hello에서 hello again으로 바꿔준다 -> state가 변경되면 render가 새로운 state와 함께 다시 작동한다
-  state = {
-    greeting: "Hello!",
-    
-  }
+  state = {}
 
   componentDidMount(){
-    setTimeout(()=>{
-      this.setState({
-        movies: [
-          {
-            title: "Matrix",
-            poster: "https://upload.wikimedia.org/wikipedia/en/thumb/0/06/Ultimate_Matrix_Collection_poster.jpg/220px-Ultimate_Matrix_Collection_poster.jpg"
-          },
-          {
-            title: "Full Metal Jacket",
-            poster: "https://upload.wikimedia.org/wikipedia/en/thumb/9/99/Full_Metal_Jacket_poster.jpg/220px-Full_Metal_Jacket_poster.jpg"
-          },
-          {
-            title: "Old Boy",
-            poster: "https://stat.ameba.jp/user_images/20190425/21/guambal/49/cc/j/o0220031314397652177.jpg"
-          },
-          {
-            title: "Star Wars",
-            poster: "https://images-na.ssl-images-amazon.com/images/I/81WjGytz7HL._SY445_.jpg"
-          },
-          {
-            title: "Trainspotting",
-            poster: "https://m.media-amazon.com/images/M/MV5BMzA5Zjc3ZTMtMmU5YS00YTMwLWI4MWUtYTU0YTVmNjVmODZhXkEyXkFqcGdeQXVyNjU0OTQ0OTY@._V1_.jpg"
-          }
-        ]
-      })
-    }, 1000)
+    this._getMovies();
   }
 
+  _renderMovies = () => {
+    const movies = this.state.movies.map(movie => {
+      console.log(movie)
+      return <Movie 
+        title={movie.title_english} 
+        poster={movie.medium_cover_image} 
+        key={movie.id} 
+        genres={movie.genres}
+        synopsis={movie.synopsis}
+      /> 
+    });
+    return movies;
+  };
+
+  _getMovies = async () => {
+    const movies = await this._callApi()
+    this.setState({
+      movies
+    });
+  };
+
+  _callApi = () => {
+    return fetch('https://yts.lt/api/v2/list_movies.json?sort_by=rating')
+    .then(response => response.json())
+    .then(json => json.data.movies)
+    .catch(err => console.log(err))
+  };
+
   render() {
+    const { movies } = this.state;
     return (
-      <div className="App">
-        {this.state.greeting}
-        {this.state.movies.map((movie, index) => {
-          return <Movie title={movie.title} poster={movie.poster} key={index} />
-        })}
+      <div className={movies ? "App" : "App--landing"}>
+        {this.state.movies ? this._renderMovies() : 'Loading'}
       </div>
     );
   }
